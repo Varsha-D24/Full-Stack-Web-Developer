@@ -1,0 +1,34 @@
+git clone https://github.com/<your-username>/inventory-dashboard.git
+cd inventory-dashboard
+cd backend
+npm install
+npm start
+cd frontend
+npm install
+npm start
+GET /api/inventory?make=Toyota&duration=last-3-months
+{
+  "data": [
+    {
+      "id": "1",
+      "make": "Toyota",
+      "model": "Corolla",
+      "msrp": 20000,
+      "date": "2024-01-01"
+    },
+    ...
+  ]
+}
+root/
+├── backend/
+│   ├── server.js      # Backend server
+│   ├── data/          # Sample CSV data
+│   ├── utils/         # Helper functions
+│   └── routes/        # API routes
+├── frontend/
+│   ├── src/
+│   │   ├── components/ # React components
+│   │   ├── pages/      # Main pages (e.g., Dashboard)
+│   │   ├── redux/      # Redux setup
+│   │   └── App.js      # Main React app
+├── README.md           # Documentation
