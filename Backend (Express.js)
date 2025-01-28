@@ -1,0 +1,48 @@
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const csv = require('csv-parser');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+const data = [];
+fs.createReadStream('./data/sample-data.csv')
+  .pipe(csv())
+  .on('data', (row) => {
+    data.push(row);
+  })
+  .on('end', () => {
+    console.log('CSV file successfully processed.');
+  });
+
+// API Endpoint
+app.get('/api/inventory', (req, res) => {
+  const { make, duration } = req.query;
+  let filteredData = data;
+
+  // Apply filters
+  if (make) filteredData = filteredData.filter((item) => item.make === make);
+  if (duration) {
+    const now = new Date();
+    const durationMap = {
+      'last-month': new Date(now.setMonth(now.getMonth() - 1)),
+      'this-month': new Date(now.setMonth(now.getMonth())),
+      'last-3-months': new Date(now.setMonth(now.getMonth() - 3)),
+      'last-6-months': new Date(now.setMonth(now.getMonth() - 6)),
+      'this-year': new Date(new Date().getFullYear(), 0, 1),
+      'last-year': new Date(new Date().getFullYear() - 1, 0, 1),
+    };
+    filteredData = filteredData.filter(
+      (item) => new Date(item.date) >= durationMap[duration]
+    );
+  }
+
+  res.json({ data: filteredData });
+});
+
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
