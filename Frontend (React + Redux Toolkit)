@@ -1,0 +1,86 @@
+Redux State Management (redux/inventorySlice.js):
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+export const fetchInventory = createAsyncThunk(
+  'inventory/fetchInventory',
+  async (filters) => {
+    const response = await axios.get('/api/inventory', { params: filters });
+    return response.data.data;
+  }
+);
+
+const inventorySlice = createSlice({
+  name: 'inventory',
+  initialState: { data: [], status: 'idle', error: null },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchInventory.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchInventory.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = action.payload;
+      })
+      .addCase(fetchInventory.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      });
+  },
+});
+
+export default inventorySlice.reducer;
+
+
+Dashboard Component:
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchInventory } from './redux/inventorySlice';
+
+const Dashboard = () => {
+  const dispatch = useDispatch();
+  const { data, status } = useSelector((state) => state.inventory);
+
+  const [filters, setFilters] = useState({});
+
+  useEffect(() => {
+    dispatch(fetchInventory(filters));
+  }, [dispatch, filters]);
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Inventory Dashboard</h1>
+      <div>
+        <h2 className="text-xl">Filters</h2>
+        <select
+          onChange={(e) => setFilters({ ...filters, make: e.target.value })}
+        >
+          <option value="">Select Make</option>
+          <option value="Toyota">Toyota</option>
+          <option value="Ford">Ford</option>
+          <option value="BMW">BMW</option>
+        </select>
+        <button
+          onClick={() =>
+            setFilters({ ...filters, duration: 'last-3-months' })
+          }
+        >
+          Last 3 Months
+        </button>
+      </div>
+      <div>
+        <h2 className="text-xl mt-4">Recent Data</h2>
+        <ul>
+          {data.slice(0, 5).map((item) => (
+            <li key={item.id}>
+              {item.make} - {item.model} - ${item.msrp}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
